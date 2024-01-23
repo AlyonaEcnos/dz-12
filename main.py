@@ -24,10 +24,8 @@ class Field:
     def is_valid(self, value):
         return isinstance(value, (int, float, str))
 
-
 class Name(Field):
     pass
-
 
 class Phone(Field):
     def is_valid(self, value):
@@ -41,7 +39,6 @@ class Birthday(Field):
             return True
         except ValueError:
             return False
-
 
 class Record:
     def __init__(self, name, birthday=None):
@@ -85,7 +82,6 @@ class Record:
             return days_left
         else:
             return None
-
 
 class AddressBook(UserDict):
     FILENAME = "address_book.pkl"
