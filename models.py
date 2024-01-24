@@ -1,6 +1,5 @@
 from datetime import datetime
 from collections import UserDict
-import pickle
 
 class Field:
     def __init__(self, value):
@@ -24,8 +23,10 @@ class Field:
     def is_valid(self, value):
         return isinstance(value, (int, float, str))
 
+
 class Name(Field):
     pass
+
 
 class Phone(Field):
     def is_valid(self, value):
@@ -39,6 +40,7 @@ class Birthday(Field):
             return True
         except ValueError:
             return False
+
 
 class Record:
     def __init__(self, name, birthday=None):
@@ -83,39 +85,17 @@ class Record:
         else:
             return None
 
+
 class AddressBook(UserDict):
-    FILENAME = "address_book.pkl"
-
-    def __init__(self):
-        super().__init__()
-        self.load()
-
-    def load(self):
-        try:
-            with open(self.FILENAME, 'rb') as file:
-                self.data = pickle.load(file)
-        except FileNotFoundError:
-            pass
-
-    def save(self):
-        with open(self.FILENAME, 'wb') as file:
-            pickle.dump(self.data, file)
-
     def add_record(self, record):
         self.data[record.name.value] = record
-        self.save()
+
+    def find(self, name):
+        return self.data.get(name)
 
     def delete(self, name):
         if name in self.data:
             del self.data[name]
-            self.save()
-
-    def find(self, search_str):
-        results = []
-        for record in self.data.values():
-            if (search_str in record.name.value) or any(search_str in phone.value for phone in record.phones):
-                results.append(record)
-        return results
 
     def iterator(self, page_size=10):
         keys = list(self.data.keys())
