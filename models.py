@@ -22,6 +22,9 @@ class Field:
 
     def is_valid(self, value):
         return isinstance(value, (int, float, str))
+    
+    def __json__(self):
+        return self.value
 
 
 class Name(Field):
@@ -30,8 +33,7 @@ class Name(Field):
 
 class Phone(Field):
     def is_valid(self, value):
-        return isinstance(value, str) and len(value) == 10 and value.isdigit()
-
+        return isinstance(value, str) and (len(value) == 10 or value.isdigit())
 
 class Birthday(Field):
     def is_valid(self, value):        
@@ -84,7 +86,14 @@ class Record:
             return days_left
         else:
             return None
-
+        
+    def __json__(self):
+        record_data = {
+            "name": self.name.__json__(),
+            "phones": [phone.__json__() for phone in self.phones],
+            "birthday": self.birthday.__json__() if self.birthday else None
+        }
+        return record_data
 
 class AddressBook(UserDict):
     def add_record(self, record):

@@ -1,4 +1,6 @@
 from models import Record, AddressBook
+import json
+import os
 
 class InputError(Exception):
     pass
@@ -6,12 +8,39 @@ class InputError(Exception):
 class ContactAssistant:
     def __init__(self):
         self.address_book = AddressBook()
+        self.file_path = "address_book.json"
+       
+        if os.path.exists(self.file_path):
+            self.load_data()
 
-    def add_contact(self, name, phone):
+    def save_data(self):
+        with open(self.file_path, "w") as file:
+            data = {
+                "records": [record.__json__() for record in self.address_book.values()]
+            }
+            json.dump(data, file)
+
+    def load_data(self):
         try:
-            record = Record(name)
-            record.add_phone(phone)
+            if os.path.getsize(self.file_path) > 0:  
+                with open(self.file_path, "r") as file:
+                    data = json.load(file)
+                    records = [Record(record["name"], record.get("birthday")) for record in data.get("records", [])]
+                    for i, record in enumerate(records):
+                        if "phones" in data.get("records", [])[i]:
+                            for phone in data["records"][i]["phones"]:
+                                record.add_phone(phone)
+                        self.address_book.add_record(record)
+        except (OSError, json.JSONDecodeError, KeyError) as e:
+            print(f"Error loading data: {e}")
+
+
+    def add_contact(self, name, phone, birthday=None):
+        try:
+            record = Record(name, birthday)
+            record.add_phone(str(phone).strip())
             self.address_book.add_record(record)
+            self.save_data()
             return f"Contact {name} added with phone {phone}"
         except ValueError as e:
             raise InputError(str(e))
@@ -20,13 +49,15 @@ class ContactAssistant:
         try:
             record = self.address_book.find(name)
             if record:
-                record.edit_phone(record.phones[0].value, phone)
+                record.phones = []  
+                record.add_phone(phone)
+                self.save_data()  
                 return f"Phone number for {name} changed to {phone}"
             else:
                 raise IndexError
         except (ValueError, IndexError) as e:
             raise InputError(str(e))
-
+        
     def get_phone(self, name):
         try:
             record = self.address_book.find(name)
@@ -44,7 +75,8 @@ class ContactAssistant:
         else:
             result = "All contacts:\n"
             for record in records:
-                result += f"{record.name}: {record.phones[0]}\n"
+                phone_numbers = ', '.join(str(phone) for phone in record.phones)
+                result += f"{record.name}: {phone_numbers}\n"
             return result.strip()
 
 
