@@ -96,12 +96,21 @@ class Record:
         return record_data
 
 class AddressBook(UserDict):
+    def search(self, query):
+        matching_records = []
+
+        for record in self.data.values():
+            if query.lower() in record.name.value.lower():
+                matching_records.append(record)
+            for phone in record.phones:
+                if query in str(phone.value):
+                    matching_records.append(record)
+
+        return matching_records
+    
     def add_record(self, record):
         self.data[record.name.value] = record
-
-    def find(self, name):
-        return self.data.get(name)
-
+   
     def delete(self, name):
         if name in self.data:
             del self.data[name]
@@ -110,3 +119,7 @@ class AddressBook(UserDict):
         keys = list(self.data.keys())
         for i in range(0, len(keys), page_size):
             yield [self.data[key] for key in keys[i:i + page_size]]
+
+    def find(self, name):
+        return self.data.get(name)
+    
